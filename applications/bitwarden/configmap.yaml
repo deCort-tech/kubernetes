@@ -1,0 +1,20 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bitwarden
+  namespace: bitwarden
+  labels:
+    app: bitwarden
+data: 
+  SMTP_HOST: '172.16.10.20'
+  SMTP_FROM: 'bitwarden@decort.tech'
+  SMTP_PORT: '25'
+  SMTP_SSL: 'false'
+  WEBSOCKET_ENABLED: 'true'
+  DATA_FOLDER: '/data'
+  DOMAIN: 'https://vault.decort.tech'
+  ROCKET_WORKERS: '10'
+  SHOW_PASSWORD_HINT: 'false'
+  WEB_VAULT_ENABLED: 'true'
+  ROCKET_PORT: '8080'
