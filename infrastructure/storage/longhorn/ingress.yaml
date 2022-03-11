@@ -1,0 +1,48 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    traefik2: "true"
+  name: longhorn-frontend
+  namespace: longhorn-system
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    #traefik.ingress.kubernetes.io/rule-type: "PathPrefixStrip"
+    kubernetes.io/tls-acme: "true"
+    cert-manager.io/acme-dns01-provider: route53
+    cert-manager.io/acme-challenge-type: dns01
+    cert-manager.io/cluster-issuer: letsencrypt
+spec:
+  rules:
+  - host: longhorn.decort.tech
+    http:
+      paths:
+      - path: /cert-placeholder
+        backend:
+          serviceName: longhorn-frontend-ui
+          servicePort: 80
+  tls:
+  - hosts:
+    - longhorn.decort.tech
+    secretName: longhorn-cert 
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: longhorn-frontend
+  namespace: longhorn-system
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`longhorn.decort.tech`) && PathPrefix(`/`)
+      kind: Rule
+      services:
+        - name: longhorn-frontend-ui
+          port: 80
+      middlewares:
+        - name: longhorn-security
+        - name: traefik-auth
+        - name: longhorn-ipwhitelist
+  tls:
+    secretName: longhorn-cert

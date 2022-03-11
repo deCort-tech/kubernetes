@@ -1,0 +1,40 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: longhorn-security
+spec:
+  headers:
+    #Security Headers
+    frameDeny: true
+    browserXssFilter: true
+    contentTypeNosniff: true
+    #HTTPS Redirect Headers
+    sslRedirect: true
+    sslTemporaryRedirect: true
+    #HSTS
+    stsIncludeSubdomains: true
+    stsPreload: true
+    stsSeconds: 31536000
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: traefik-auth
+spec:
+  forwardAuth:
+    address: https://auth.decort.tech/_oauth
+    #trustForwardHeader: true
+    authResponseHeaders:
+      - X-Forwarded-User
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: longhorn-ipwhitelist
+spec:
+  ipWhiteList:
+    sourceRange:
+      - 127.0.0.1/32
+      - 192.168.0.0/16
+      - 172.16.0.0/12
+      - 10.0.0.0/8    
