@@ -1,0 +1,23 @@
+apiVersion: cert-manager.io/v1alpha2
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt
+spec:
+  acme:
+    email: roel@decort.tech
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-issuer-account-key
+    solvers:  
+    - selector:
+        matchLabels:
+          traefik2: "true"    
+        dnsZones:
+          - "decort.tech"
+      dns01:
+        route53:
+          region: eu-west-1
+          accessKeyID: AKIAZOQYSZWYUCC5P5ML
+          secretAccessKeySecretRef:
+            name: cert-manager-route53
+            key: secret-access-key
