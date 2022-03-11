@@ -1,0 +1,123 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: vault
+  labels:
+    k8s-app: vault
+spec:
+  serviceName: vault-server
+  podManagementPolicy: Parallel
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: vault
+      component: server
+  template:
+    metadata:
+      labels:
+        k8s-app: vault
+        component: server
+    spec:
+      containers:
+      - name: vault
+        command: ["vault", "server", "-config", "/vault/config/config.json"]
+        image: "vault:1.4.3"
+        env:
+          - name: POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          - name: VAULT_CLUSTER_ADDR
+            value: "https://vault-service.vault-system.svc.cluster.local:8201"
+          - name: VALUT_API_ADDR
+            value: "http://vault-service.vault-system.svc.cluster.local:8200"
+          - name: VAULT_REDIRECT_ADDR
+            value: "http://vault-service.vault-system.svc.cluster.local:8200"
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          capabilities:
+            add:
+              - IPC_LOCK
+        volumeMounts:
+          - name: configurations
+            mountPath: /vault/config/config.json
+            subPath: config.json
+          - name: vault
+            mountPath: /etc/tls
+          - name: tls
+            mountPath: /etc/tls/consul
+          - name: gitlab-tls
+            mountPath: /etc/tls/gitlab
+        ports:
+          - containerPort: 8200
+            name: vault
+          - containerPort: 8201
+            name: cluster-addr
+          - containerPort: 8200
+            name: cluster-api
+      - name: consul-vault-agent
+        image: "consul:1.8.0"
+        env:
+          - name: GOSSIP_ENCRYPTION_KEY
+            valueFrom:
+              secretKeyRef:
+                name: consul
+                key: gossip-encryption-key
+          - name: VAULT_KEY
+            valueFrom:
+              secretKeyRef:
+                name: vault-key
+                key: vault-token          
+          - name: NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+        args:
+          - "agent"
+          - "-retry-join=consul-0.consul.$(NAMESPACE).svc.cluster.local"
+          - "-encrypt=$(GOSSIP_ENCRYPTION_KEY)"
+          - "-config-file=/consul/myconfig/myconfig.json"
+          - "-domain=cluster.local"
+          - "-datacenter=nldc01"
+          - "-disable-host-node-id"
+          - "-node=vault-ha-0"
+        volumeMounts:
+            - name: config
+              mountPath: /consul/myconfig
+            - name: tls
+              mountPath: /etc/tls
+      volumes:
+        - name: configurations
+          configMap:
+            name: vault-configmap
+        - name: config
+          configMap:
+            name: consul-configmap
+        - name: tls
+          secret:
+            secretName: consul
+        - name: vault
+          secret:
+            secretName: vault
+        - name: gitlab-tls
+          secret:
+            secretName: gitlab-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vault-service
+  labels:
+    k8s-app: vault
+    app.kubernetes.io/name: vault
+    app.kubernetes.io/component: vault
+spec:
+  type: ClusterIP
+  ports:
+    - name: cluster-api
+      port: 8200
+      protocol: TCP
+    - name: cluster-addr
+      port: 8201
+  selector:
+    k8s-app: vault

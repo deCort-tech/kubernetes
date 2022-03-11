@@ -1,0 +1,23 @@
+{
+    "hosts": [
+      "vault",
+      "keyvault.decort.tech",
+      "vault-ha-0.vault-service.vault-consul.svc.cluster.local",
+      "vault-ha-1.vault-service.vault-consul.svc.cluster.local",
+      "vault-ha-2.vault-service.vault-consul.svc.cluster.local",
+      "127.0.0.1"
+    ],
+    "key": {
+      "algo": "rsa",
+      "size": 4096
+    },
+    "names": [
+      {
+        "C": "NL",
+        "ST": "Noord-Brabant",
+        "L": "Den Bosch",
+        "O": "deCort.tech",
+        "OU": "DevOps"
+      }
+    ]
+  }
