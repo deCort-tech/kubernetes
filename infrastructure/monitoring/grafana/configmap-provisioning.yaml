@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-provisioning
+  namespace: monitoring-system
+data:
+  provisioning.yaml: |-
+    # # config file version
+    apiVersion: 1
+
+    providers:
+     - name: 'kubernetes-folder'
+       orgId: 1
+       folder: 'kubernetes'
+       folderUid: ''
+       type: file
+       options:
+         path: /var/lib/grafana/dashboards/kubernetes

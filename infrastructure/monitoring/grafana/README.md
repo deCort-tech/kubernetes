@@ -1,0 +1,3 @@
+# grafana
+
+Grafana monitoring dashboard

@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-notifiers
+  namespace: monitoring-system
+data:
+  notifiers.yaml: |-    
+    notifiers:
+      - name: alertmanager
+        type: prometheus-alertmanager
+        uid: alertmanager-notifier
+        is_default: true
+        send_reminder: true
+        frequency: 1h
+        disable_resolve_message: false
+        settings:
+          url: http://alertmanager.monitoring-system.svc.cluster.local:9093
+
+    delete_notifiers:
+      - name: alertmanager
+        uid: alertmanager-notifier

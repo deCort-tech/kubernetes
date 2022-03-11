@@ -1,0 +1,17 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: grafana-security
+spec:
+  headers:
+    #Security Headers
+    customFrameOptionsValue: SAMEORIGIN
+    browserXssFilter: true
+    contentTypeNosniff: true
+    #HTTPS Redirect Headers
+    sslRedirect: true
+    sslTemporaryRedirect: true
+    #HSTS
+    stsIncludeSubdomains: true
+    stsPreload: true
+    stsSeconds: 31536000
