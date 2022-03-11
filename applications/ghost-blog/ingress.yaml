@@ -1,0 +1,62 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: ghost-blog
+  namespace: ghost-blog
+  labels:
+    traefik2: "true"
+  annotations:
+    kubernetes.io/ingress.class: cert
+    #traefik.ingress.kubernetes.io/rule-type: "PathPrefixStrip"
+    kubernetes.io/tls-acme: "true"
+    cert-manager.io/acme-dns01-provider: route53
+    cert-manager.io/acme-challenge-type: dns01
+    cert-manager.io/cluster-issuer: letsencrypt
+spec:
+  rules:
+  - host: roel.decort.tech
+    http:
+      paths:
+      - path: /cert-placeholder
+        backend:
+          serviceName: ghost-blog
+          servicePort: 80
+  tls:
+  - hosts:
+    - roel.decort.tech
+    secretName: ghost-cert   
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: ghost-blog
+  namespace: ghost-blog
+spec:
+  entryPoints:
+    - web
+    - websecure
+  routes:
+    - match: Host(`roel.decort.tech`)
+      kind: Rule
+      services:
+        - name: ghost-blog
+          port: 80
+      middlewares:
+        - name: ghost-blog-security
+        #- name: traefik-auth
+  tls:
+    secretName: ghost-cert
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: TLSOption
+metadata:
+  name: ghost-blog-tlsoption
+spec:
+  cipherSuites:
+  - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+  - TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
+  - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
+  - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+  - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+  minVersion: VersionTLS12
+  sniStrict: true

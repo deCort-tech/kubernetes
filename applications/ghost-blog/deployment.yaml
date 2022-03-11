@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ghost-blog
+  labels:
+    app: ghost-blog
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ghost-blog
+  template:
+    metadata:
+      name: ghost-blog
+      labels:
+        app: ghost-blog
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: ghost-blog
+        image: docker.decort.tech/decort.tech-infra/applications/docker/ghost-blog:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 2368
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        env:
+        - name: url
+          value: https://roel.decort.tech
+        - name: database__client
+          value: mysql
+        - name: database__connection__host
+          value: mysql.ghost-blog.svc.cluster.local
+        - name: database__connection__user
+          valueFrom:
+            secretKeyRef:
+              name: ghost-secrets
+              key: ghost-db-user
+        - name: database__connection__password
+          valueFrom:
+            secretKeyRef:
+              name: ghost-secrets
+              key: ghost-db-password
+        - name: database__connection__database
+          value: ghost-db
+        - name: storage__active
+          value: s3
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: ghost-s3-secrets
+              key: AWS_ACCESS_KEY_ID
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ghost-s3-secrets
+              key: AWS_SECRET_ACCESS_KEY   
+        - name: AWS_DEFAULT_REGION
+          value: eu-west-1          
+        - name: GHOST_STORAGE_ADAPTER_S3_PATH_BUCKET
+          value: blog-decort-tech-prd
+        - name: GHOST_STORAGE_ADAPTER_S3_ENDPOINT
+          value: https://s3.decort.tech
+        - name: GHOST_STORAGE_ADAPTER_S3_ASSET_HOST
+          value: https://s3.decort.tech/blog-decort-tech-prd
+        - name: GHOST_STORAGE_ADAPTER_S3_FORCE_PATH_STYLE
+          value: 'true'
+
+      imagePullSecrets:
+        - name: gitlab-auth
+---
+apiVersion: v1
+kind: Service
+metadata:
+ name: ghost-blog
+ namespace: ghost-blog
+spec:
+ ports:
+ - port: 80
+   targetPort: 2368
+ selector:
+   app: ghost-blog
