@@ -1,0 +1,46 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    traefik2: "true"
+  name: traefik-auth
+  namespace: traefik-system
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    #traefik.ingress.kubernetes.io/rule-type: "PathPrefixStrip"
+    kubernetes.io/tls-acme: "true"
+    cert-manager.io/acme-dns01-provider: route53
+    cert-manager.io/acme-challenge-type: dns01
+    cert-manager.io/cluster-issuer: letsencrypt
+spec:
+  rules:
+  - host: auth.decort.tech
+    http:
+      paths:
+      - path: /cert-placeholder
+        backend:
+          serviceName: traefik-auth
+          servicePort: websecure
+  tls:
+  - hosts:
+    - auth.decort.tech
+    secretName: traefikauth-cert 
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: traefik-auth
+  namespace: traefik-system
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`auth.decort.tech`)
+      kind: Rule
+      services:
+        - name: traefik-auth
+          port: 80
+      middlewares:
+        - name: traefikauth-security
+  tls:
+    secretName: traefikauth-cert
