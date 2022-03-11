@@ -1,0 +1,23 @@
+{
+    "CN": "mongodb.cluster.local",
+    "hosts": [
+      "mongodb-0.mongodb.unifi-controller.svc.cluster.local",
+      "mongodb-1.mongodb.unifi-controller.svc.cluster.local",
+      "mongodb-2.mongodb.unifi-controller.svc.cluster.local",
+      "mongodb",
+      "127.0.0.1"
+    ],
+    "key": {
+      "algo": "rsa",
+      "size": 4096
+    },
+    "names": [
+      {
+        "C": "NL",
+        "ST": "Noord-Brabant",
+        "L": "Den Bosch",
+        "O": "deCort.tech",
+        "OU": "DevOps"
+      }
+    ]
+  }

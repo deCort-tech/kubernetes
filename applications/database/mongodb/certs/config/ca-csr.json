@@ -1,0 +1,18 @@
+{
+    "hosts": [
+      "cluster.local"
+    ],
+    "key": {
+      "algo": "rsa",
+      "size": 4096
+    },
+    "names": [
+      {
+        "C": "NL",
+        "ST": "Noord-Brabant",
+        "L": "Den Bosch",
+        "O": "deCort.tech",
+        "OU": "DevOps"
+      }
+    ]
+  }

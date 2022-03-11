@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongodb
+  namespace: unifi-controller
+spec:
+  serviceName: mongodb
+  replicas: 3
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: mongodb 
+      component: unifi-database
+  template:
+    metadata:
+      labels:
+        app: mongodb
+        component: unifi-database
+    spec:
+      terminationGracePeriodSeconds: 15
+      serviceAccountName: "mongodb"
+      containers:
+      - name: mongo
+        image: mongo:4.2
+        args:
+          - "--replSet"
+          - "unifi-mongodb-rs"
+          - "--bind_ip_all"
+          - "--clusterAuthMode"
+          - "x509"
+          - "--tlsClusterFile"
+          - "/data/tls/mongo/mongodbauth-full.pem"
+          - "--setParameter"
+          - "authenticationMechanisms=SCRAM-SHA-1"
+          - "--tlsMode"
+          - "requireTLS"
+          - "--tlsCAFile"
+          - "/data/tls/mongo/ca.pem"
+          - "--tlsCertificateKeyFile"
+          - "/data/tls/mongo/mongodb-full.pem"
+        ports:
+        - name: mongo
+          containerPort: 27017
+          protocol: TCP
+        volumeMounts:
+        - name: mongodb-data
+          mountPath: /data/db
+        - name: mongodb-tls
+          mountPath: /data/tls/mongo
+      volumes:
+        - name: mongodb-tls
+          secret:
+            secretName: mongodb-tls
+  volumeClaimTemplates:
+    - metadata:
+        name: mongodb-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: longhorn
+        resources:
+          requests:
+            storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb
+  namespace: unifi-controller
+  labels:
+    app: mongodb
+    component: unifi-database
+spec:
+  ports:
+    - port: 27017
+      targetPort: 27017
+  clusterIP: None
+  selector:
+    app: mongodb 
+    component: unifi-database
