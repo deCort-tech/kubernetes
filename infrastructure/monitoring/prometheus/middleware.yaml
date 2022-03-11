@@ -1,0 +1,28 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: traefik-auth
+spec:
+  forwardAuth:
+    address: https://auth.decort.tech/_oauth
+    #trustForwardHeader: true
+    authResponseHeaders:
+      - X-Forwarded-User
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: prometheus-security
+spec:
+  headers:
+    #Security Headers
+    customFrameOptionsValue: SAMEORIGIN
+    browserXssFilter: true
+    contentTypeNosniff: true
+    #HTTPS Redirect Headers
+    sslRedirect: true
+    sslTemporaryRedirect: true
+    #HSTS
+    stsIncludeSubdomains: true
+    stsPreload: true
+    stsSeconds: 31536000
