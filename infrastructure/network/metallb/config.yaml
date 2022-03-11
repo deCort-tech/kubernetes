@@ -1,0 +1,7 @@
+configInline:
+  address-pools:
+  - name: layer2
+    protocol: layer2
+    addresses:
+    - 10.10.1.155-10.10.1.165
+    avoid-buggy-ips: true

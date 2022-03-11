@@ -1,0 +1,1 @@
+helm install metallb --namespace=metallb-system -f config.yaml stable/metallb
