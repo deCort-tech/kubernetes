@@ -1,0 +1,62 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: alertmanager
+  namespace: monitoring-system
+  labels:
+    traefik2: "true"
+  annotations:
+    kubernetes.io/ingress.class: cert
+    #traefik.ingress.kubernetes.io/rule-type: "PathPrefixStrip"
+    kubernetes.io/tls-acme: "true"
+    cert-manager.io/acme-dns01-provider: route53
+    cert-manager.io/acme-challenge-type: dns01
+    cert-manager.io/cluster-issuer: letsencrypt
+spec:
+  rules:
+  - host: alertmanager.decort.tech
+    http:
+      paths:
+      - path: /cert-placeholder
+        backend:
+          serviceName: alertmanager
+          servicePort: 9093
+  tls:
+  - hosts:
+    - alertmanager.decort.tech
+    secretName: alertmanager-cert  
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: alertmanager-route
+  namespace: monitoring-system
+spec:
+  entryPoints:
+    - web
+    - websecure
+  routes:
+    - match: Host(`alertmanager.decort.tech`)
+      kind: Rule
+      services:
+        - name: alertmanager
+          port: 9093
+      middlewares:
+        - name: alertmanager-security
+        - name: traefik-auth
+  tls:
+    secretName: alertmanager-cert
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: TLSOption
+metadata:
+  name: alertmanager-tlsoption
+spec:
+  cipherSuites:
+  - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+  - TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
+  - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
+  - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+  - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+  minVersion: VersionTLS13
+  sniStrict: true
